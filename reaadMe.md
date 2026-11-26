@@ -1,93 +1,247 @@
-<svg xmlns="http://www.w3.org/2000/svg" width="820" height="220" viewBox="0 0 820 220" role="img" aria-label="Banner de perfil de Juan Ernesto">
-  <defs>
-    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
-      <stop offset="0" stop-color="#0e110e"/>
-      <stop offset="0.55" stop-color="#10140f"/>
-      <stop offset="1" stop-color="#0c0f0c"/>
-    </linearGradient>
-    <clipPath id="round">
-      <rect width="820" height="220" rx="12"/>
-    </clipPath>
-  </defs>
+import { useEffect, useRef, useState, type ChangeEvent } from "react";
+import { createFileRoute } from "@tanstack/react-router";
+import { TerminalBanner } from "@/components/TerminalBanner";
+import {
+  DEFAULT_ASCII_ART,
+  DEFAULT_BANNER,
+  exportBannerPng,
+  imageFileToAscii,
+  type BannerData,
+} from "@/lib/ascii";
+import { buildReadmeSnippet } from "@/lib/readme";
 
-  <g clip-path="url(#round)">
-    <rect width="820" height="220" fill="url(#bg)"/>
+const STORAGE_KEY = "termbanner:v3";
 
-    <!-- borde exterior -->
-    <rect x="0.5" y="0.5" width="819" height="219" rx="12" fill="none" stroke="#2c322b"/>
+export const Route = createFileRoute("/")({
+  head: () => ({
+    meta: [
+      { title: "JEBUS — Banner estilo terminal" },
+      {
+        name: "description",
+        content: "Banner de perfil estilo terminal oscura para Juan Cordero (JEBUS) con editor y descarga en PNG.",
+      },
+      { property: "og:title", content: "JEBUS — Banner estilo terminal" },
+      {
+        property: "og:description",
+        content: "Banner de perfil estilo terminal oscura con arte ASCII interactivo y exportación en PNG.",
+      },
+      { property: "og:type", content: "website" },
+      { name: "twitter:card", content: "summary_large_image" },
+    ],
+  }),
+  component: Index,
+});
 
-    <!-- divisor de columnas -->
-    <line x1="290" y1="0" x2="290" y2="220" stroke="#2c322b"/>
+function Index() {
+  const [banner, setBanner] = useState<BannerData>(DEFAULT_BANNER);
+  const [hydrated, setHydrated] = useState(false);
+  const [uploadError, setUploadError] = useState<string | null>(null);
+  const [copied, setCopied] = useState(false);
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
-    <!-- columna izquierda -->
-    <text x="145" y="30" text-anchor="middle" font-family="Menlo, Consolas, monospace" font-size="12" fill="#8a9384" letter-spacing="1">jcordero</text>
+  useEffect(() => {
+    try {
+      const saved = window.localStorage.getItem(STORAGE_KEY);
+      if (saved) {
+        const parsed = JSON.parse(saved) as Partial<BannerData>;
+        setBanner({ ...DEFAULT_BANNER, ...parsed });
+      }
+    } catch {
+      // Ignore malformed localStorage data
+    }
+    setHydrated(true);
+  }, []);
 
-    <text text-anchor="middle" font-family="Menlo, Consolas, monospace" font-size="9" fill="#aeb8a8">
-      <tspan x="145" y="58">  ,d88b.d88b,</tspan>
-      <tspan x="145" y="69">  88888888888</tspan>
-      <tspan x="145" y="80">  `Y8888888Y'</tspan>
-      <tspan x="145" y="91">    `Y888Y'</tspan>
-      <tspan x="145" y="102">      `Y'</tspan>
-    </text>
+  useEffect(() => {
+    if (!hydrated) return;
+    try {
+      window.localStorage.setItem(STORAGE_KEY, JSON.stringify(banner));
+    } catch {
+      // Ignore quota errors
+    }
+  }, [banner, hydrated]);
 
-    <text x="145" y="136" text-anchor="middle" font-family="Menlo, Consolas, monospace" font-size="17" fill="#eef2ea" letter-spacing="2">JUAN ERNESTO</text>
+  const updateField = (field: keyof BannerData, value: string) => {
+    setBanner((prev) => ({ ...prev, [field]: value }));
+  };
 
-    <text x="145" y="196" text-anchor="middle" font-family="Menlo, Consolas, monospace" font-size="12" fill="#6f7869" letter-spacing="1">Bolivia ▊</text>
+  const copyReadmeSnippet = async () => {
+    const snippet = buildReadmeSnippet(banner);
+    try {
+      await navigator.clipboard.writeText(snippet);
+      setCopied(true);
+      window.setTimeout(() => setCopied(false), 2200);
+    } catch {
+      setUploadError("Tu navegador no dejó copiar el código. Cópialo a mano desde el recuadro.");
+    }
+  };
 
-    <!-- columna derecha -->
-    <text x="326" y="48" font-family="Menlo, Consolas, monospace" font-size="14" fill="#eef2ea">About</text>
-    <text font-family="Menlo, Consolas, monospace" font-size="12" fill="#a7b0a0">
-      <tspan x="326" y="70">Construyo herramientas y proyectos con código.</tspan>
-      <tspan x="326" y="86">Escribe aquí una breve descripción de ti.</tspan>
-    </text>
+  const handleImageUpload = async (e: ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    if (!file.type.startsWith("image/")) {
+      setUploadError("Selecciona un archivo de imagen válido (PNG, JPG o WebP).");
+      return;
+    }
+    setUploadError(null);
+    try {
+      const ascii = await imageFileToAscii(file);
+      updateField("asciiArt", ascii);
+    } catch (err) {
+      setUploadError(err instanceof Error ? err.message : "No se pudo convertir la imagen.");
+    } finally {
+      e.target.value = "";
+    }
+  };
 
-    <line x1="326" y1="104" x2="790" y2="104" stroke="#2c322b"/>
+  return (
+    <main className="mx-auto flex min-h-screen w-full max-w-5xl flex-col justify-center gap-8 px-4 py-10 sm:px-6">
+      <header className="flex flex-wrap items-center justify-between gap-4">
+        <div>
+          <h1 className="text-xl font-semibold tracking-tight text-foreground sm:text-2xl">
+            Banner estilo terminal
+          </h1>
+          <p className="text-sm text-muted-foreground">
+            Edita los campos o sube una foto para el retrato ASCII y descárgalo en PNG (1500×540).
+          </p>
+        </div>
 
-    <text x="326" y="130" font-family="Menlo, Consolas, monospace" font-size="14" fill="#eef2ea">Stack</text>
-    <text x="326" y="150" font-family="Menlo, Consolas, monospace" font-size="12" fill="#a7b0a0">HTML · CSS · JavaScript · Python · SQL</text>
+        <div className="flex flex-wrap items-center gap-2.5">
+          <input
+            ref={fileInputRef}
+            type="file"
+            accept="image/*"
+            onChange={handleImageUpload}
+            className="hidden"
+          />
+          <button
+            type="button"
+            onClick={() => fileInputRef.current?.click()}
+            className="inline-flex items-center gap-2 rounded-md border border-border bg-secondary px-3.5 py-2 text-sm font-medium text-secondary-foreground transition-colors hover:bg-accent"
+          >
+            Subir foto ASCII
+          </button>
+          <button
+            type="button"
+            onClick={() => exportBannerPng(banner)}
+            className="inline-flex items-center gap-2 rounded-md bg-primary px-4 py-2 text-sm font-medium text-primary-foreground transition-opacity hover:opacity-90"
+          >
+            Descargar PNG
+          </button>
+          <button
+            type="button"
+            onClick={copyReadmeSnippet}
+            className="inline-flex items-center gap-2 rounded-md border border-border bg-secondary px-3.5 py-2 text-sm font-medium text-secondary-foreground transition-colors hover:bg-accent"
+          >
+            {copied ? "¡Copiado!" : "Copiar código README"}
+          </button>
+        </div>
+      </header>
 
-    <line x1="326" y1="168" x2="790" y2="168" stroke="#2c322b"/>
+      <TerminalBanner data={banner} />
 
-    <text x="326" y="194" font-family="Menlo, Consolas, monospace" font-size="14" fill="#eef2ea">Elsewhere</text>
-    <text x="430" y="194" font-family="Menlo, Consolas, monospace" font-size="12" fill="#a7b0a0">tudominio.com · x.com/tuusuario · hola@tudominio.com</text>
-  </g>
-</svg>
+      {uploadError && (
+        <p role="alert" className="text-sm text-destructive">
+          {uploadError}
+        </p>
+      )}
 
-## 🚀 Sobre mí
-- 🔭 Actualmente trabajando en **[Nombre del Proyecto](https://github.com/tuusuario/proyecto)**
-- 🌱 Aprendiendo **Rust** y **Kubernetes**
-- 💬 Pregúntame sobre **React, Node.js o arquitectura de microservicios**
-- ⚡ Dato curioso: *Escribo mejor código después de la medianoche*
+      <section aria-label="Personalizar contenido" className="grid grid-cols-1 gap-4 rounded-xl border border-border bg-card p-5 sm:grid-cols-2 lg:grid-cols-3">
+        <label className="space-y-1.5 text-xs text-muted-foreground">
+          <span>Usuario / ruta</span>
+          <input
+            className="editor-input"
+            value={banner.handle}
+            onChange={(e) => updateField("handle", e.target.value)}
+            maxLength={32}
+          />
+        </label>
 
-## 🛠️ Stack Tecnológico
-<p align="left">
-  <a href="https://skillicons.dev">
-    <img src="https://skillicons.dev/icons?i=js,ts,react,nodejs,python,docker,aws,git,postgres&theme=light" />
-  </a>
-</p>
+        <label className="space-y-1.5 text-xs text-muted-foreground">
+          <span>Nombre</span>
+          <input
+            className="editor-input"
+            value={banner.name}
+            onChange={(e) => updateField("name", e.target.value)}
+            maxLength={40}
+          />
+        </label>
 
-## 📊 Estadísticas
-<div align="center">
-  <img width="49%" src="http://github-readme-stats.vercel.app/api?username=tuusuario&show_icons=true&theme=radical&hide_border=true" alt="GitHub Stats"/>
-  <img width="49%" src="http://github-readme-stats-sigma-five.vercel.app/api/top-langs/?username=tuusuario&layout=compact&theme=dracula&hide_border=true" alt="Top Langs"/>
-</div>
+        <label className="space-y-1.5 text-xs text-muted-foreground">
+          <span>Ubicación</span>
+          <input
+            className="editor-input"
+            value={banner.location}
+            onChange={(e) => updateField("location", e.target.value)}
+            maxLength={40}
+          />
+        </label>
 
-<!-- Snakes animadas (opcional pero divertido) -->
-<img align="right" src="https://visitcount.itsvg.in/api?id=tuusuario&icon=0&color=0" alt="Visit Count"/>
+        <label className="space-y-1.5 text-xs text-muted-foreground sm:col-span-2 lg:col-span-3">
+          <span>About — línea 1</span>
+          <input
+            className="editor-input"
+            value={banner.aboutLine1}
+            onChange={(e) => updateField("aboutLine1", e.target.value)}
+            maxLength={90}
+          />
+        </label>
 
-## 🏆 Trofeos
-<p align="center">
-  <img src="https://github-profile-trophy.vercel.app/?username=tuusuario&theme=onedark&no-frame=true&column=7&margin-w=15" alt="Trophies"/>
-</p>
+        <label className="space-y-1.5 text-xs text-muted-foreground sm:col-span-2 lg:col-span-3">
+          <span>About — línea 2 (opcional)</span>
+          <input
+            className="editor-input"
+            value={banner.aboutLine2}
+            onChange={(e) => updateField("aboutLine2", e.target.value)}
+            maxLength={90}
+          />
+        </label>
 
-## 📫 Contáctame
-<p align="center">
-  <a href="mailto:tu@email.com"><img src="https://img.shields.io/badge/Gmail-D14836?style=for-the-badge&logo=gmail&logoColor=white"/></a>
-  <a href="https://linkedin.com/in/tuusuario"><img src="https://img.shields.io/badge/LinkedIn-0077B5?style=for-the-badge&logo=linkedin&logoColor=white"/></a>
-  <a href="https://twitter.com/tuusuario"><img src="https://img.shields.io/badge/Twitter-1DA1F2?style=for-the-badge&logo=twitter&logoColor=white"/></a>
-</p>
+        <label className="space-y-1.5 text-xs text-muted-foreground sm:col-span-2 lg:col-span-3">
+          <span>Stack</span>
+          <input
+            className="editor-input"
+            value={banner.stack}
+            onChange={(e) => updateField("stack", e.target.value)}
+            maxLength={110}
+          />
+        </label>
 
----
-<div align="center">
-  <sub>Built with ❤️ and Markdown</sub>
-</div>
+        <label className="space-y-1.5 text-xs text-muted-foreground sm:col-span-2 lg:col-span-3">
+          <span>Elsewhere (enlaces)</span>
+          <input
+            className="editor-input"
+            value={banner.elsewhere}
+            onChange={(e) => updateField("elsewhere", e.target.value)}
+            maxLength={110}
+          />
+        </label>
+
+        {banner.asciiArt !== DEFAULT_ASCII_ART && (
+          <div className="sm:col-span-2 lg:col-span-3">
+            <button
+              type="button"
+              onClick={() => updateField("asciiArt", DEFAULT_ASCII_ART)}
+              className="text-xs text-muted-foreground underline underline-offset-4 hover:text-foreground"
+            >
+              Restaurar arte ASCII original
+            </button>
+          </div>
+        )}
+      </section>
+
+      <section
+        aria-label="Código para tu README"
+        className="rounded-xl border border-border bg-card p-5"
+      >
+        <h2 className="text-sm font-semibold text-foreground">Pégalo en tu README.md</h2>
+        <p className="mt-1 text-xs text-muted-foreground">
+          Sube el PNG descargado a tu repositorio de perfil y pega esta línea tal cual.
+        </p>
+        <pre className="mt-3 overflow-x-auto rounded-lg border border-border bg-input px-4 py-3 font-mono text-xs break-all text-terminal-ink">
+          {buildReadmeSnippet(banner)}
+        </pre>
+      </section>
+    </main>
+  );
+}
