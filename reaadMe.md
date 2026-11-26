@@ -1,10 +1,57 @@
-<div align="center">
-  <h1>¡Hola! Soy Alex 👋</h1>
-  <p><em>Desarrollador Full Stack | Amante del código limpio y el café ☕</em></p>
-  
-  <!-- Badges animados -->
-  <img src="JEBUS-EL-GRANDE" alt="Profile views"/>
-</div>
+<svg xmlns="http://www.w3.org/2000/svg" width="820" height="220" viewBox="0 0 820 220" role="img" aria-label="Banner de perfil de Juan Ernesto">
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#0e110e"/>
+      <stop offset="0.55" stop-color="#10140f"/>
+      <stop offset="1" stop-color="#0c0f0c"/>
+    </linearGradient>
+    <clipPath id="round">
+      <rect width="820" height="220" rx="12"/>
+    </clipPath>
+  </defs>
+
+  <g clip-path="url(#round)">
+    <rect width="820" height="220" fill="url(#bg)"/>
+
+    <!-- borde exterior -->
+    <rect x="0.5" y="0.5" width="819" height="219" rx="12" fill="none" stroke="#2c322b"/>
+
+    <!-- divisor de columnas -->
+    <line x1="290" y1="0" x2="290" y2="220" stroke="#2c322b"/>
+
+    <!-- columna izquierda -->
+    <text x="145" y="30" text-anchor="middle" font-family="Menlo, Consolas, monospace" font-size="12" fill="#8a9384" letter-spacing="1">jcordero</text>
+
+    <text text-anchor="middle" font-family="Menlo, Consolas, monospace" font-size="9" fill="#aeb8a8">
+      <tspan x="145" y="58">  ,d88b.d88b,</tspan>
+      <tspan x="145" y="69">  88888888888</tspan>
+      <tspan x="145" y="80">  `Y8888888Y'</tspan>
+      <tspan x="145" y="91">    `Y888Y'</tspan>
+      <tspan x="145" y="102">      `Y'</tspan>
+    </text>
+
+    <text x="145" y="136" text-anchor="middle" font-family="Menlo, Consolas, monospace" font-size="17" fill="#eef2ea" letter-spacing="2">JUAN ERNESTO</text>
+
+    <text x="145" y="196" text-anchor="middle" font-family="Menlo, Consolas, monospace" font-size="12" fill="#6f7869" letter-spacing="1">Bolivia ▊</text>
+
+    <!-- columna derecha -->
+    <text x="326" y="48" font-family="Menlo, Consolas, monospace" font-size="14" fill="#eef2ea">About</text>
+    <text font-family="Menlo, Consolas, monospace" font-size="12" fill="#a7b0a0">
+      <tspan x="326" y="70">Construyo herramientas y proyectos con código.</tspan>
+      <tspan x="326" y="86">Escribe aquí una breve descripción de ti.</tspan>
+    </text>
+
+    <line x1="326" y1="104" x2="790" y2="104" stroke="#2c322b"/>
+
+    <text x="326" y="130" font-family="Menlo, Consolas, monospace" font-size="14" fill="#eef2ea">Stack</text>
+    <text x="326" y="150" font-family="Menlo, Consolas, monospace" font-size="12" fill="#a7b0a0">HTML · CSS · JavaScript · Python · SQL</text>
+
+    <line x1="326" y1="168" x2="790" y2="168" stroke="#2c322b"/>
+
+    <text x="326" y="194" font-family="Menlo, Consolas, monospace" font-size="14" fill="#eef2ea">Elsewhere</text>
+    <text x="430" y="194" font-family="Menlo, Consolas, monospace" font-size="12" fill="#a7b0a0">tudominio.com · x.com/tuusuario · hola@tudominio.com</text>
+  </g>
+</svg>
 
 ## 🚀 Sobre mí
 - 🔭 Actualmente trabajando en **[Nombre del Proyecto](https://github.com/tuusuario/proyecto)**
