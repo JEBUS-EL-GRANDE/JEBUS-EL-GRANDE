@@ -2,4 +2,4 @@
   <img src="banner.svg" alt="Banner de perfil" height="px" width="100%" />
 </p>
 
-![video](Icons/florBlue.gif "flor bonita")
+<img src="Icons/florBlue.gif" width="300" height="300">
